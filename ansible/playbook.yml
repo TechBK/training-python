@@ -1,0 +1,51 @@
+---
+- hosts: worker
+  vars:
+    app_name: foobar
+    app_repo: git@git.teko.vn:platform/saletool-notification-server.git
+    app_root: /home/stn/saletool-notification-server
+
+  tasks:
+  - name: Create user
+    meta: noop
+
+  - name: Checkout repository
+    git:
+      repo: "{{app_repo}}"
+      dest: "{{app_root}}"
+      force: true
+      accept_hostkey: true
+      version: "{{ lookup('env', 'CI_COMMIT_SHA') | default('HEAD', true) }}"
+    notify:
+    - restart app
+
+  - name: Install pip dependencies
+    pip:
+      chdir: "{{app_root}}"
+      requirements: ./requirements.txt
+      virtualenv:   "{{app_root}}/.venv"
+      virtualenv_python: python3.6
+    notify:
+    - restart app
+
+  - name: Copy app config
+    copy:
+      src:  instance/config.py
+      dest: "{{app_root}}/instance/config.py"
+      force: yes
+    notify:
+    - restart app
+
+  handlers:
+  - name: restart nginx
+    become: yes
+    service: name=nginx state=restarted
+
+  - name: restart app
+    shell: |
+      source .venv/bin/activate
+      supervisorctl reread
+      supervisorctl restart foobar
+    args:
+      chdir: "{{app_root}}"
+      executable: /bin/bash
