@@ -2,35 +2,48 @@ stages:
   - test
   - deploy
 
-test:pytest:
-  stage: test
-  image: python:3.6-alpine
-  services:
-    - mysql:5.7
-  variables:
-    MYSQL_HOST: "mysql"
-    MYSQL_PORT: "3306"
-    MYSQL_DATABASE:      "app"
-    MYSQL_ROOT_PASSWORD: "supersecret"
-  cache:
-    key: pip-cache
-    paths: [ .pip ]
-  before_script:
-    - pip install --cache-dir=.pip -r requirements.txt
-  script:
-    - py.test --cov=src --cov-report=term --cov-report=html
-  coverage: '/^TOTAL\s+\d+\s+\d+\s+(\d+\%)\s*$/'
+#debug:
+#  stage: test
+#  variables:
+#    CI_DEBUG_TRACE: "true"
+#  script:
+#    - echo "Hello world"
+#  tags:
+#    - docker
+
+#test:pytest:
+#  stage: test
+#  image: python:3.6-alpine
+#  services:
+#    - mysql:5.7
+#  variables:
+#    MYSQL_HOST: "mysql"
+#    MYSQL_PORT: "3306"
+#    MYSQL_DATABASE:      "app"
+#    MYSQL_ROOT_PASSWORD: "supersecret"
+#  cache:
+#    key: pip-cache
+#    paths: [ .pip ]
+#  before_script:
+#    - pip install --cache-dir=.pip -r requirements.txt
+#  script:
+#    - py.test --cov=src --cov-report=term
+#  coverage: '/^TOTAL\s+\d+\s+\d+\s+(\d+\%)\s*$/'
+#  tags:
+#    - docker
 
 deploy:production:
   stage: deploy
   image: dungdm93/ansible:ubuntu16.04
   script:
-    - envsubst < .env.example > .env
+    - envsubst < instance/config.temp > instance/config.py
     - ansible-playbook ansible/playbook.yml -i ansible/hosts
-  environment:
-    name: production
-    url:  prod.teko.vn
-  allow_failure: false
-  when: manual
+#  environment:
+#    name: production
+#    url:  prod.teko.vn
+#  allow_failure: false
+#  when: manual
   only:
     - master
+  tags:
+    - docker

@@ -1,40 +1,51 @@
 ---
-- hosts: worker
+- hosts: production
   vars:
-    app_name: foobar
-    app_repo: git@git.teko.vn:platform/saletool-notification-server.git
-    app_root: /home/stn/saletool-notification-server
+    username: "{{ lookup('env', 'CI_PROJECT_NAMESPACE') }}"
+    app_name: "{{ lookup('env', 'CI_PROJECT_NAME') }}"
+    app_repo: "{{ lookup('env', 'CI_PROJECT_URL') }}"
+    app_root: "/home/{{ username }}/{{ app_name }}"
 
   tasks:
   - name: Create user
-    meta: noop
+    user:
+      name:    "{{username}}"
+      comment: "Gitlab-CI auto-create user"
+      group:   admin
+      shell:   /bin/bash
 
   - name: Checkout repository
+    become: yes
+    become_user: "{{username}}"
     git:
       repo: "{{app_repo}}"
       dest: "{{app_root}}"
       force: true
       accept_hostkey: true
       version: "{{ lookup('env', 'CI_COMMIT_SHA') | default('HEAD', true) }}"
-    notify:
-    - restart app
+#    notify:
+#    - restart app
 
   - name: Install pip dependencies
+    become: yes
+    become_user: "{{username}}"
     pip:
       chdir: "{{app_root}}"
-      requirements: ./requirements.txt
+      requirements: "./requirements.txt"
       virtualenv:   "{{app_root}}/.venv"
       virtualenv_python: python3.6
-    notify:
-    - restart app
+#    notify:
+#    - restart app
 
   - name: Copy app config
+    become: yes
+    become_user: "{{username}}"
     copy:
-      src:  instance/config.py
+      src:  "../instance/config.py"
       dest: "{{app_root}}/instance/config.py"
       force: yes
-    notify:
-    - restart app
+#    notify:
+#    - restart app
 
   handlers:
   - name: restart nginx

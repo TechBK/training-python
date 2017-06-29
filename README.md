@@ -1,8 +1,5 @@
 Intern Python
 =============
-[![build status](badges/master/build.svg)](commits/master)
-[![coverage report](badges/master/coverage.svg)](commits/master)
-
 
 ## Development
 ### Requirement
