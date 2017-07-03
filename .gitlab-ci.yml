@@ -36,9 +36,9 @@ deploy:production:
   stage: deploy
   image: dungdm93/ansible:ubuntu16.04
   script:
-    - envsubst < ansible/files/supervisor-worker.conf.temp > ansible/files/supervisor-worker.conf
-    - envsubst < ansible/files/nginx-sites.conf.temp       > ansible/files/nginx-sites.conf
-    - envsubst < instance/config.py.temp                   > instance/config.py
+    - envsubst < etc/supervisor.d/supervisor-worker.conf.temp > etc/supervisor.d/supervisor-worker.conf
+    - envsubst < etc/nginx-sites.conf.temp                    > etc/nginx-sites.conf
+    - envsubst < instance/config.py.temp                      > instance/config.py
     - ansible-playbook ansible/playbook.yml -i ansible/hosts
 #  environment:
 #    name: production

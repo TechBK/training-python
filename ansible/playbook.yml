@@ -24,8 +24,8 @@
       force: true
       accept_hostkey: true
       version: "{{ lookup('env', 'CI_COMMIT_SHA') | default('HEAD', true) }}"
-#    notify:
-#    - restart app
+    notify:
+    - restart app
 
   - name: Install pip dependencies
     become: yes
@@ -35,8 +35,8 @@
       requirements: "./requirements.txt"
       virtualenv:   "{{app_root}}/.venv"
       virtualenv_python: python3.6
-#    notify:
-#    - restart app
+    notify:
+    - restart app
 
   - name: Config app
     become: yes
@@ -45,44 +45,52 @@
       src:  "../instance/config.py"
       dest: "{{app_root}}/instance/config.py"
       force: yes
-#    notify:
-#    - restart app
+    notify:
+    - restart app
 
   - name: Config supervisor
     copy:
-      src:  "files/supervisor-worker.conf"
-      dest: "/etc/supervisor/conf.d/{{username}}-{{app_name}}.conf"
+      src:  "../etc/supervisor.d/supervisor-worker.conf"
+      dest: "{{app_root}}/etc/supervisor.d/{{username}}@{{app_name}}.conf"
       force: yes
     notify:
     - restart app
 
   - name: Config nginx
     copy:
-      src:  "files/nginx-sites.conf"
-      dest: "/etc/nginx/sites-enabled/{{username}}-{{app_name}}.conf"
+      src:  "../etc/nginx-sites.conf"
+      dest: "/etc/nginx/sites-enabled/{{username}}@{{app_name}}.conf"
       force: yes
-#    notify:
-#    - restart nginx
+    notify:
+    - restart nginx
 
   handlers:
-  - name: restart nginx
-    service: name=nginx state=restarted
-
   # ===== SETUP INSTRUCTIONS =====
-  # Disable supervisor service
-  # $ sudo systemctl disable supervisor
-  # Run supervisor manually with command:
-  # $ supervisord
+  # NOTE:
+  #   Subprocess inherit environment when “supervisord” start, NOT program start
+  #   so, we need `source .venv/bin/activate` before `supervisord`
+  #   and hard to config different environment for each program :(
+  #
+  # SOLUTION: Each supervisord per program
+  #   Disable supervisor service
+  #   $ sudo systemctl disable supervisor
+  #   Run supervisor manually with command:
+  #   $ cd /path/to/your/project/dir
+  #   $ source .venv/bin/activate
+  #   $ supervisord
   # ==============================
   - name: restart app
     shell: |
       set -e
-      if [ ! -f "/run/supervisor.sock" ]; then
+      if [ ! -S "var/run/supervisor.sock" ]; then
+        source .venv/bin/activate
         supervisord
       fi
-      source .venv/bin/activate
       supervisorctl reread
       supervisorctl restart {{username}}@{{app_name}}:*
     args:
       chdir: "{{app_root}}"
       executable: /bin/bash
+
+  - name: restart nginx
+    service: name=nginx state=restarted
