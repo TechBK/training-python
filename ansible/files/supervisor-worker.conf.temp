@@ -1,0 +1,12 @@
+[program:${CI_PROJECT_NAMESPACE}@${CI_PROJECT_NAME}]
+user=${CI_PROJECT_NAMESPACE}
+directory=/home/${CI_PROJECT_NAMESPACE}/${CI_PROJECT_NAME}
+command=gunicorn -b unix:var/gunicorn.sock main:app
+process_name=%(process_num)02d
+
+numprocs=1
+autostart=true
+autorestart=true
+
+redirect_stderr=true
+stdout_logfile=var/log/%(program_name)s.log

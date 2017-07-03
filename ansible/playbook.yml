@@ -1,4 +1,5 @@
 ---
+# Login user as `root`
 - hosts: production
   vars:
     username: "{{ lookup('env', 'CI_PROJECT_NAMESPACE') }}"
@@ -37,7 +38,7 @@
 #    notify:
 #    - restart app
 
-  - name: Copy app config
+  - name: Config app
     become: yes
     become_user: "{{username}}"
     copy:
@@ -47,16 +48,41 @@
 #    notify:
 #    - restart app
 
+  - name: Config supervisor
+    copy:
+      src:  "files/supervisor-worker.conf"
+      dest: "/etc/supervisor/conf.d/{{username}}-{{app_name}}.conf"
+      force: yes
+    notify:
+    - restart app
+
+  - name: Config nginx
+    copy:
+      src:  "files/nginx-sites.conf"
+      dest: "/etc/nginx/sites-enabled/{{username}}-{{app_name}}.conf"
+      force: yes
+#    notify:
+#    - restart nginx
+
   handlers:
   - name: restart nginx
-    become: yes
     service: name=nginx state=restarted
 
+  # ===== SETUP INSTRUCTIONS =====
+  # Disable supervisor service
+  # $ sudo systemctl disable supervisor
+  # Run supervisor manually with command:
+  # $ supervisord
+  # ==============================
   - name: restart app
     shell: |
+      set -e
+      if [ ! -f "/run/supervisor.sock" ]; then
+        supervisord
+      fi
       source .venv/bin/activate
       supervisorctl reread
-      supervisorctl restart foobar
+      supervisorctl restart {{username}}@{{app_name}}:*
     args:
       chdir: "{{app_root}}"
       executable: /bin/bash
