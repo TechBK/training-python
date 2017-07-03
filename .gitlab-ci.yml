@@ -40,9 +40,9 @@ deploy:production:
     - envsubst < etc/nginx-sites.conf.temp                    > etc/nginx-sites.conf
     - envsubst < instance/config.py.temp                      > instance/config.py
     - ansible-playbook ansible/playbook.yml -i ansible/hosts
-#  environment:
-#    name: production
-#    url:  prod.teko.vn
+  environment:
+    name: production
+    url:  ${CI_PROJECT_NAME}.${CI_PROJECT_NAMESPACE}.${HOST_URL}.xip.io
 #  allow_failure: false
 #  when: manual
   only:

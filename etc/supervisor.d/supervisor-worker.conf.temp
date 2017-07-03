@@ -1,4 +1,4 @@
-[program:${CI_PROJECT_NAMESPACE}@${CI_PROJECT_NAME}]
+[program:${CI_PROJECT_NAME}@${CI_PROJECT_NAMESPACE}]
 user=${CI_PROJECT_NAMESPACE}
 ; directory=/home/${CI_PROJECT_NAMESPACE}/${CI_PROJECT_NAME}
 command=gunicorn -b unix:var/run/gunicorn.sock main:app

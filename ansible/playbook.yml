@@ -51,7 +51,7 @@
   - name: Config supervisor
     copy:
       src:  "../etc/supervisor.d/supervisor-worker.conf"
-      dest: "{{app_root}}/etc/supervisor.d/{{username}}@{{app_name}}.conf"
+      dest: "{{app_root}}/etc/supervisor.d/{{app_name}}@{{username}}.conf"
       force: yes
     notify:
     - restart app
@@ -59,7 +59,7 @@
   - name: Config nginx
     copy:
       src:  "../etc/nginx-sites.conf"
-      dest: "/etc/nginx/sites-enabled/{{username}}@{{app_name}}.conf"
+      dest: "/etc/nginx/sites-enabled/{{app_name}}@{{username}}.conf"
       force: yes
     notify:
     - restart nginx
@@ -87,7 +87,7 @@
         supervisord
       fi
       supervisorctl reread
-      supervisorctl restart {{username}}@{{app_name}}:*
+      supervisorctl restart {{app_name}}@{{username}}:*
     args:
       chdir: "{{app_root}}"
       executable: /bin/bash
