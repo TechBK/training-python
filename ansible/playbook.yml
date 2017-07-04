@@ -1,6 +1,6 @@
 ---
 # Login user as `root`
-- hosts: production
+- hosts: webservers
   vars:
     username: "{{ lookup('env', 'CI_PROJECT_NAMESPACE') }}"
     app_name: "{{ lookup('env', 'CI_PROJECT_NAME') }}"

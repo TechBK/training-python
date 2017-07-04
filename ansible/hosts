@@ -1,2 +1,5 @@
-[production]
-35.186.148.164  ansible_user=root
+[webservers]
+35.186.148.164
+
+[webservers:vars]
+ansible_user=root
