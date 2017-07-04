@@ -49,16 +49,16 @@
     - restart app
 
   - name: Config supervisor
-    copy:
-      src:  "../etc/supervisor.d/supervisor-worker.conf"
-      dest: "{{app_root}}/etc/supervisor.d/{{app_name}}@{{username}}.conf"
+    template:
+      src:  "templates/supervisor-worker.conf.j2"
+      dest: "/etc/supervisor/conf.d/{{app_name}}@{{username}}.conf"
       force: yes
     notify:
     - restart app
 
   - name: Config nginx
-    copy:
-      src:  "../etc/nginx-sites.conf"
+    template:
+      src:  "templates/nginx-sites.conf.j2"
       dest: "/etc/nginx/sites-enabled/{{app_name}}@{{username}}.conf"
       force: yes
     notify:
@@ -71,26 +71,21 @@
   #   so, we need `source .venv/bin/activate` before `supervisord`
   #   and hard to config different environment for each program :(
   #
-  # SOLUTION: Each supervisord per program
+  # SOLUTION 01: Each supervisord per program
   #   Disable supervisor service
   #   $ sudo systemctl disable supervisor
   #   Run supervisor manually with command:
   #   $ cd /path/to/your/project/dir
   #   $ source .venv/bin/activate
   #   $ supervisord
+  # SOLUTION 02: Wrap serve command in `run.sh` file
+  #  So, instead of run `flask run` or `gunicorn main:app`
+  #  we run `./run.sh`
   # ==============================
   - name: restart app
-    shell: |
-      set -e
-      if [ ! -S "var/run/supervisor.sock" ]; then
-        source .venv/bin/activate
-        supervisord
-      fi
-      supervisorctl reread
-      supervisorctl restart {{app_name}}@{{username}}:*
-    args:
-      chdir: "{{app_root}}"
-      executable: /bin/bash
+    supervisorctl:
+      name: "{{app_name}}@{{username}}:"
+      state: restarted
 
   - name: restart nginx
     service: name=nginx state=restarted
