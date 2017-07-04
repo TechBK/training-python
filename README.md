@@ -1,123 +1,147 @@
-Intern Python
-=============
+Training::Python
+===============
+`Training::Python` là bản mẫu (boilerplate) phục vụ cho công tác training Python.  
+Bạn có thể tự do lựa chọn framework (Django, Flask...) cũng như bất kỳ thư viện nào cần thiết. 
+Project này đơn thuần chỉ thiết lập trước một **Gialb-CI pipeline** tự động chạy *test* đồng thời *deploy* mỗi khi có commit được *push* lên `master`.
 
-## Development
-### Requirement
-* Python 3.6+
-Ubuntu 14.04 or 16.04
+## Setup
+### Setup project
+* Fork this project: [dung.dm/training-python](http://git.teko.vn/dung.dm/training-python)
+
+![Fork project](https://farm5.staticflickr.com/4238/35579204201_a5d51d0093_z.jpg)
+
+Sau khi fork, bạn có thể đổi tên project & repo URL nếu muốn:
+
+  1. Vào **Settings >  General**  
+  2. Coi mục **Project settings** hoặc **Rename repository**
+
+* Clone repo
 
 ```shell
-$ sudo add-apt-repository ppa:jonathonf/python-3.6
-# --or--
-# sudo add-apt-repository ppa:fkrull/deadsnakes
-
-$ sudo apt-get update
-$ sudo apt-get install python3.6
+$ git clone git@git.teko.vn:<username>/training-python.git
+$ cd training-python
 ```
 
-* pip 9+
+* Add *dung.dm*'s remote: (for keeping things up-to-date)
 
 ```shell
-$ sudo apt-get install python-pip
+$ git remote add dung.dm http://git.teko.vn/dung.dm/training-python.git
 ```
 
-* Virtual Environments
+### Setup development environment
+#### Install requirements:
+1. Python 3.6+
+2. Pip 9+
+3. virtualenv
 
+Kiểm tra môi trường:
 ```shell
-$ sudo apt-get install virtualenv virtualenvwrapper
-$ virtualenv -p $(which python3.6) $HOME
-```
-
---- Test python ---  
-
-```shell
+### Check version
 $ python --version
-Python 3.6.1
+$ python3.6 --version
 $ pip --version
-pip 9.0.1 from /home/dungdm93/lib/python3.6/site-packages (python 3.6)
+$ virtualenv --version
+
+### Check install path
+$ which python
+$ which virtualenv
+...
 ```
 
---- Troubleshooting ---  
-
-If virtual won't work, restart your shell:
+Cài đặt các packages còn thiếu như sau:
 ```shell
-$ exec -l $SHELL
+### Install Python 3.6 in Ubuntu 14.04 or 16.04
+$ sudo add-apt-repository ppa:jonathonf/python-3.6
+$ sudo apt update
+$ sudo apt install python3.6
+
+### Install pip
+$ sudo apt install python-pip
+$ pip install -U pip            # Update pip to last version
+
+### VirtualEnv
+$ sudo apt install virtualenv virtualenvwrapper
 ```
 
-If still won't work, check those lines exist in your `~/.profile` or `~/.bashrc`
+#### Setup VirtualEnv (Virtual Environments)
+Có 2 levels có thể setup VirtualEnv:  
+* [User level](#1-virtualenv-at-user-level)
+* [Project level](#2-virtualenv-at-project-level)
 
+#### 1. VirtualEnv at User level.
+Nếu bạn có nhiều Python projects với môi trường giống nhau (VD: cùng Python 3.6).
+Setup VirtualEnv at User level là giải pháp giúp tiết kiệm thời gian setup cho từng project.
+
+```shell
+$ virtualenv -p python3.6 $HOME
+```
+
+Thêm dòng này vào `~/.profile` hoặc `~/.bashrc` (nếu chưa có):
 ```shell
 # set PATH so it includes user's private bin directories
 PATH="$HOME/bin:$HOME/.local/bin:$PATH"
 ```
 
-### Setup project
-* Clone repo
-
+Kiểm tra thành quả:
 ```shell
-$ git@git.teko.vn:platform/saletool-notification-server.git
-$ cd saletool-notification-server
+$ exec -l $SHELL                # Reload shell
+
+$ python --version
+Python 3.6.1
+
+$ pip --version
+pip 9.0.1 from /home/dungdm93/lib/python3.6/site-packages (python 3.6)
 ```
 
-* Install dependencies
+#### 2. VirtualEnv at Project level.
+Setup VirtualEnv at Project level giúp bạn cô lập (isolate) môi trường giữa các project với nhau.  
+Tuy nhiên, mỗi lần trước khi thao tác trên project, bạn đều phải load lại môi trường :unamused:
 
 ```shell
-$ pip install -r requirements.txt
+$ virtualenv -p python3.6 .venv
+$ source .venv/bin/activate
 ```
 
-### Run & test :gear:
-#### Locally
-* Upgrade database
+**Note**: VirtualEnv ở *Project* level sẽ override *User* level, nên bạn có thể sử dụng đồng thời cả 2 phương pháp trên. 
+VD: Hầu hết project là Python 3.6 (config ở User level), song 1 số ít project sử dụng Python 2.7 (config ở Project level)
 
-```shell
-$ flask db upgrade
-```
-
-* Run
+## Run & test :gear:
+### Run
 
 ```shell
 $ export FLASK_APP=main.py
-$ flask subscribe_teko_queue
 $ flask run
 ```
 
-* Test
+### Test
 
 ```shell
-# Unit test
+### Unit test
 $ py.test
-# Pytest with coverage
-$ py.test --cov=src --cov-report=term --cov-report=html
+### Pytest with coverage
+$ py.test --cov=src --cov-report=term
 ```
 
-#### inside Docker
-* Setup db
-```shell
-$ docker run -d --name mysql \
-         -p 3306:3306 \
-         -e MYSQL_ROOT_PASSWORD=supersecret \
-         -e MYSQL_DATABASE=stn \
-         mysql
-$ export SQLALCHEMY_DATABASE_URI="mysql+pymysql://root:supersecret@localhost:3306/stn"
-```
-
-* run app
+### Lint: Check coding conventions
 
 ```shell
-$ export FLASK_APP=main.py
-$ export ENV_MODE=prod
-$ flask db upgrade heads # migrate db
-$ gunicorn -c etc/gunicorn.conf.py main:app
+$ pip install pylint
+$ pylint src
 ```
 
-* run nginx
+## Folder structure
+Project này đã được config sẵn cho việc auto test & auto deploy, nên có những file bạn ko nên tự ý sửa/xóa nếu chưa hiểu rõ bản chất của nó.
+* `.gitlab-ci.yml`:  
+File định nghĩa pipeline, sử dụng bởi Gitlab-CI. KHÔNG nên động vào :smirk:
+* `ansible/`:  
+Folder chứa script deploy app lên production. Để nguyên nó đấy :sunglasses:
+* `run.sh`:  
+Production config VirtualEnv at Project level, tức cần load môi trường trước khi run server.
+Tuy nhiên `supervisor` lại run server trong single command, do đó, `run.sh` làm nhiệm vụ wrap tất cả command đó lại.
+Bạn có thể sửa nội dung nếu cần thiết.
+* `var/`:  
+Folder chứa các file lúc runtime, VD: log files, socket file,... git ignore tuy nhiên ko được xóa, vì sẽ gây lỗi khi chạy trên production.
+* `requirements.txt`, `main.py`, folders `src/`, `tests/`:  
+Bạn sửa thoải mái, song nên cần thận khi đổi tên (rename/move).  
 
-```shell
-$ docker run -d --name nginx \
-    -v $(pwd)/var/web-gunicorn.sock:/var/www/stn/var/web-gunicorn.sock \
-    -v $(pwd)/etc/stn.teko.vn.nginx:/etc/nginx/conf.d/default.conf:ro \
-    -p 80:80 nginx
-```
-
-## Production
-TODO
+**Important**: Contact [DungDM](https://teko.facebook.com/profile.php?id=100015907001998) để biết thêm thông tin chi tiết :cowboy:
