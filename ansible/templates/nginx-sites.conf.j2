@@ -1,0 +1,17 @@
+# URL: {{app_name}}.{{username}}.35.186.148.164.xip.io
+
+upstream {{app_name}}.{{username}} {
+    server unix:{{app_root}}/var/run/gunicorn.sock;
+}
+
+server {
+    listen      80;
+    server_name {{app_name}}.{{username}}.*;
+
+    location / {
+        proxy_pass http://{{app_name}}.{{username}};
+    }
+
+    error_log  {{app_root}}/var/log/sites-error.log;
+    access_log {{app_root}}/var/log/sites-access.log;
+}
