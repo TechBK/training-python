@@ -145,3 +145,31 @@ Folder chứa các file lúc runtime, VD: log files, socket file,... git ignore 
 Bạn sửa thoải mái, song nên cần thận khi đổi tên (rename/move).  
 
 **Important**: Contact [DungDM](https://teko.facebook.com/profile.php?id=100015907001998) để biết thêm thông tin chi tiết :cowboy:
+
+## App Config and Database
+### App Config
+Trên production, app config nên được load từ file `instance/config.py`. 
+File này sẽ auto-generated trong quá trình deploy dựa vào biến môi trường (`environment variables`) và template file `instance/config.py.temp`.  
+Vậy để thêm một config ta cần làm 2 việc như sau:
+
+### Define environment variables
+Có một số chỗ ta có thể định nghĩa environment variables như sau:
+* Secret Variables: Định nghĩa các variables cần tính bảo mật cao như password, secret keys,...  
+  **Settings** > **CI/CD Pipelines** > Coi mục "**Secret Variables**"
+* Global variables: Các variables sẽ share giữa các CI jobs.  
+  Top-level session `variables` trong file `.gitlab-ci.yml` (Giống như `HOST_URL`)
+* Job variables: Những variables chỉ xuất hiện trong job tương ứng.  
+  Job-level session `variables` trong file `.gitlab-ci.yml` (Giống như `MYSQL_DATABASE` của job `test:pytest`)
+
+### Write config.py template
+// TODO
+
+### Database
+// TODO
+
+## Others
+### Get Deploy URL
+Sau khi deploy xong bạn có thể tận hưởng thành quả của mình bằng cách:  
+**Pipelines** > **Environments** > Click "**Open**" button bên cạnh *Environment name*.
+
+![Get Deploy URL](https://farm5.staticflickr.com/4049/35727650805_894d01af99_z.jpg)
