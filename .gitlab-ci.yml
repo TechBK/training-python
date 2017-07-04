@@ -5,18 +5,10 @@ stages:
 variables:
   HOST_URL: 35.186.148.164
 
-#debug:
-#  stage: test
-#  variables:
-#    CI_DEBUG_TRACE: "true"
-#  script:
-#    - echo "Hello world"
-#  tags:
-#    - docker
-
-#test:pytest:
-#  stage: test
-#  image: python:3.6-alpine
+test:pytest:
+  stage: test
+  image: python:3.6-alpine
+  # Enable this if your test need database
 #  services:
 #    - mysql:5.7
 #  variables:
@@ -24,16 +16,16 @@ variables:
 #    MYSQL_PORT: "3306"
 #    MYSQL_DATABASE:      "app"
 #    MYSQL_ROOT_PASSWORD: "supersecret"
-#  cache:
-#    key: pip-cache
-#    paths: [ .pip ]
-#  before_script:
-#    - pip install --cache-dir=.pip -r requirements.txt
-#  script:
-#    - py.test --cov=src --cov-report=term
-#  coverage: '/^TOTAL\s+\d+\s+\d+\s+(\d+\%)\s*$/'
-#  tags:
-#    - docker
+  cache:
+    key: pip-cache
+    paths: [ .pip ]
+  before_script:
+    - pip install --cache-dir=.pip -r requirements.txt
+  script:
+    - py.test --cov=src --cov-report=term
+  coverage: '/^TOTAL\s+\d+\s+\d+\s+(\d+\%)\s*$/'
+  tags:
+    - docker
 
 deploy:production:
   stage: deploy
@@ -44,7 +36,7 @@ deploy:production:
   environment:
     name: production
     url:  http://${CI_PROJECT_NAME}.${CI_PROJECT_NAMESPACE}.${HOST_URL}.xip.io
-#  allow_failure: false
+  allow_failure: false
 #  when: manual
   only:
     - master
