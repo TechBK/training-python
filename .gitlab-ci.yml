@@ -30,9 +30,9 @@ test:pytest:
 deploy:production:
   stage: deploy
   image: dungdm93/ansible:ubuntu16.04
-  variables:
-    REQUIRE_DB: MySQL
-    DATABASE_PASSWORD: foobar     # default qwerty
+#  variables:
+#    REQUIRE_DB: MySQL
+#    DATABASE_PASSWORD: foobar     # default qwerty
   script:
     - ansible-playbook ansible/playbook.yml -i ansible/hosts
   environment:
@@ -42,7 +42,5 @@ deploy:production:
 #  when: manual
   only:
     - master
-    - feature/run.sh
-    - feature/mysql
   tags:
     - docker
