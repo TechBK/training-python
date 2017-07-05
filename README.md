@@ -149,7 +149,7 @@ Bạn sửa thoải mái, song nên cần thận khi đổi tên (rename/move).
 ## App Config and Database
 ### App Config
 Trên production, app config nên được load từ file `instance/config.py`. 
-File này sẽ auto-generated trong quá trình deploy dựa vào biến môi trường (`environment variables`) và template file `instance/config.py.temp`.  
+File này sẽ auto-generated trong quá trình deploy dựa vào biến môi trường (`environment variables`) và template file `instance/config.py.j2`.  
 Vậy để thêm một config ta cần làm 2 việc như sau:
 
 ### Define environment variables
@@ -162,10 +162,74 @@ Có một số chỗ ta có thể định nghĩa environment variables như sau:
   Job-level session `variables` trong file `.gitlab-ci.yml` (Giống như `MYSQL_DATABASE` của job `test:pytest`)
 
 ### Write config.py template
-// TODO
+Template được viết dựa trên [Jinja2](http://jinja.pocoo.org/) template engine.
+Tóm tắt:
+* `{% ... %}` for [Statements](http://jinja.pocoo.org/docs/2.9/templates/#list-of-control-structures), VD:
+    ```
+    {% for user in users %}
+        ...
+    {% endfor %}
+    
+    {% if users is admin %}
+        ...
+    {% endif %}
+    ```
+
+* `{{ ... }}` for [Expressions](http://jinja.pocoo.org/docs/2.9/templates/#expressions), VD:
+    ```
+    MYSQL_USERNAME="{{ db_user }}"
+    app_name="{{ lookup('env', 'CI_PROJECT_NAME') }}"          # Environment variables
+    {{ foo.bar }}
+    {{ foo['bar'] }}
+    ```
+
+* [Filters](http://jinja.pocoo.org/docs/2.9/templates/#builtin-filters) use pipe `|` annotation, VD:
+    ```
+    {{ name | striptags | title }}
+    {{ listx | join(', ') }}
+    ```
+
+Tham khảo [Jinja2 Designer Documentation](http://jinja.pocoo.org/docs/2.9/templates/)
 
 ### Database
-// TODO
+#### 1. Database for Test
+Sử dụng Gitlab-CI services:
+```
+# .gitlab-ci.yml
+test:pytest:
+  services:
+    - mysql:5.7
+  variables:
+    MYSQL_HOST: "mysql"
+    MYSQL_PORT: "3306"
+    MYSQL_DATABASE:      "app"
+    MYSQL_ROOT_PASSWORD: "supersecret"
+  ...
+```
+
+#### 2. Database for Live
+Database sẽ tự động cấp phát khi variable `REQUIRE_DB = <db_type>` được assign.
+Hiện tại `db_type` mới chỉ support `MySQL` (chú ý hoa thường).
+```
+# .gitlab-ci.yml
+deploy:production:
+  variables:
+    REQUIRE_DB: MySQL
+    DATABASE_PASSWORD: foobar     # default qwerty
+  ...
+```
+
+Sau deploy, các configs sẽ được assign vào file `instance/config.py`, VD:
+```
+# instance/config.py
+MYSQL_HOST="localhost"
+MYSQL_PORT=3306
+MYSQL_USERNAME="dung.dm"
+MYSQL_PASSWORD="foobar"
+MYSQL_DATABASE="dungdm_trainingpython"
+```
+
+Xem `instance/config.py.j2` for template
 
 ## Others
 ### Get Deploy URL
