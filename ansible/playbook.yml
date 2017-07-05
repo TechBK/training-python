@@ -3,10 +3,14 @@
 - hosts: webservers
   vars:
     username: "{{ lookup('env', 'CI_PROJECT_NAMESPACE') }}"
+
     app_name: "{{ lookup('env', 'CI_PROJECT_NAME') }}"
     app_repo: "{{ lookup('env', 'CI_PROJECT_URL') }}"
     app_root: "/home/{{ username }}/{{ app_name }}"
+
     db_name:  "{{username | regex_replace('\\W+') }}_{{app_name | regex_replace('\\W+') }}"
+    db_user:  "{{username}}"
+    db_pass:  "{{ lookup('env', 'DATABASE_PASSWORD') | default('qwerty', true) }}"
 
   tasks:
   - name: Create user
@@ -39,16 +43,6 @@
     notify:
     - restart app
 
-  - name: Config app
-    become: yes
-    become_user: "{{username}}"
-    copy:
-      src:  "../instance/config.py"
-      dest: "{{app_root}}/instance/config.py"
-      force: yes
-    notify:
-    - restart app
-
   # SHOW DATABASES;
   # SELECT DATABASE();
   - name: Create a new MySQL Database
@@ -69,14 +63,23 @@
   # SHOW GRANTS FOR CURRENT_USER;
   # SHOW GRANTS FOR CURRENT_USER();
   - name: Create MySQL user
-    become: yes
     mysql_user:
-      name:         "{{username}}"
-      password:     "qwerty"
+      name:         "{{db_user}}"
+      password:     "{{db_pass}}"
       priv:         "{{db_name}}.*:ALL"
       append_privs: yes
       state:        present
     when: lookup('env', 'REQUIRE_DB') == 'MySQL'
+
+  - name: Config app
+    become: yes
+    become_user: "{{username}}"
+    template:
+      src:  "../instance/config.py.j2"
+      dest: "{{app_root}}/instance/config.py"
+      force: yes
+    notify:
+    - restart app
 
   - name: Config supervisor
     template:

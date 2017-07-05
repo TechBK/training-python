@@ -32,8 +32,8 @@ deploy:production:
   image: dungdm93/ansible:ubuntu16.04
   variables:
     REQUIRE_DB: MySQL
+    DATABASE_PASSWORD: foobar     # default qwerty
   script:
-    - envsubst < instance/config.py.temp > instance/config.py
     - ansible-playbook ansible/playbook.yml -i ansible/hosts
   environment:
     name: production
