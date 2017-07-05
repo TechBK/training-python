@@ -3,9 +3,14 @@
 - hosts: webservers
   vars:
     username: "{{ lookup('env', 'CI_PROJECT_NAMESPACE') }}"
+
     app_name: "{{ lookup('env', 'CI_PROJECT_NAME') }}"
     app_repo: "{{ lookup('env', 'CI_PROJECT_URL') }}"
     app_root: "/home/{{ username }}/{{ app_name }}"
+
+    db_name:  "{{username | regex_replace('\\W+') }}_{{app_name | regex_replace('\\W+') }}"
+    db_user:  "{{username}}"
+    db_pass:  "{{ lookup('env', 'DATABASE_PASSWORD') | default('qwerty', true) }}"
 
   tasks:
   - name: Create user
@@ -38,11 +43,39 @@
     notify:
     - restart app
 
+  # SHOW DATABASES;
+  # SELECT DATABASE();
+  - name: Create a new MySQL Database
+    mysql_db:
+      name:   "{{db_name}}"
+      state:  present
+    when: lookup('env', 'REQUIRE_DB') == 'MySQL'
+
+  # SELECT User, Host FROM mysql.user;
+  # SELECT * FROM mysql.user\G;
+  # DESC mysql.user;
+  #
+  # SELECT USER();
+  # SELECT CURRENT_USER();
+  #
+  # SHOW GRANTS FOR 'root'@'localhost';
+  # SHOW GRANTS;
+  # SHOW GRANTS FOR CURRENT_USER;
+  # SHOW GRANTS FOR CURRENT_USER();
+  - name: Create MySQL user
+    mysql_user:
+      name:         "{{db_user}}"
+      password:     "{{db_pass}}"
+      priv:         "{{db_name}}.*:ALL"
+      append_privs: yes
+      state:        present
+    when: lookup('env', 'REQUIRE_DB') == 'MySQL'
+
   - name: Config app
     become: yes
     become_user: "{{username}}"
-    copy:
-      src:  "../instance/config.py"
+    template:
+      src:  "../instance/config.py.j2"
       dest: "{{app_root}}/instance/config.py"
       force: yes
     notify:
