@@ -237,3 +237,17 @@ Sau khi deploy xong bạn có thể tận hưởng thành quả của mình bằ
 **Pipelines** > **Environments** > Click "**Open**" button bên cạnh *Environment name*.
 
 ![Get Deploy URL](https://farm5.staticflickr.com/4049/35727650805_894d01af99_z.jpg)
+
+### Connect to Live Database
+
+```shell
+$ mysql -h '35.186.148.164' -u <username> -p <dbname>
+```
+
+Trong đó:
+* `<username>`: tên tài khoản GitLab (VD: `dung.dm`)
+* `<dbname>`: tên database, theo quy tắc `dbname = username.replace('\W+','')_projectname.replace('\W+','')`. Tức:
+  * Bỏ tất cả các ký tự đặc biệt trong `username` và `projectname`
+  * `username` và `projectname` ghép với nhau bởi dấu gạch dưới `_`  
+
+VD: `username = dung.dm`, `projectname = training-python` ⮕ `dbname = dungdm_trainingpython`
